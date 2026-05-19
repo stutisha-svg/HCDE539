@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RaceBand — Kinetic Pacing Wearable</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bungee&family=Courier+Prime+Sans:ital,wght@0,400;0,700;1,400&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- CONNECTION BAR — Purple -->
+  <header class="section section--purple" id="connection-bar">
+    <div class="section__inner">
+      <h1 class="page-title">RaceBand</h1>
+      <p class="tagline">Kinetic pacing cues for runners</p>
+      <div class="m3-card m3-card--elevated connection-card">
+        <div class="connection-controls">
+          <button type="button" id="btn-connect" class="btn btn--filled">
+            <span class="btn__label">Connect to Wearable</span>
+          </button>
+          <button type="button" id="btn-disconnect" class="btn btn--tonal" hidden>
+            <span class="btn__label">Disconnect</span>
+          </button>
+          <span id="connection-status" class="chip chip--disconnected" role="status" aria-live="polite">
+            <span class="chip__dot" aria-hidden="true"></span>
+            Disconnected
+          </span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- DASHBOARD — White -->
+    <section class="section section--white" id="dashboard" aria-labelledby="dashboard-heading">
+      <div class="section__inner">
+        <h2 id="dashboard-heading" class="section-title">Dashboard</h2>
+        <p class="section-subtitle">Latest run — target vs actual pace per mile</p>
+
+        <div class="dashboard-grid">
+          <article class="m3-card stat-card">
+            <h3 class="stat-card__label">Target Pace</h3>
+            <p id="dash-target-pace" class="stat-card__value">—:——</p>
+            <p class="stat-card__unit">min / mile</p>
+          </article>
+          <article class="m3-card stat-card stat-card--compare">
+            <h3 class="stat-card__label">Actual Pace</h3>
+            <p id="dash-actual-pace" class="stat-card__value">—:——</p>
+            <p class="stat-card__unit">min / mile</p>
+            <p id="dash-pace-delta" class="stat-card__delta" aria-live="polite"></p>
+          </article>
+          <article class="m3-card stat-card">
+            <h3 class="stat-card__label">Run Status</h3>
+            <p id="dash-run-status" class="stat-card__value stat-card__value--small">No active run</p>
+            <p id="dash-last-updated" class="stat-card__meta">Waiting for wearable data…</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- RUN CONFIGURATION — Green -->
+    <section class="section section--green" id="run-config" aria-labelledby="config-heading">
+      <div class="section__inner">
+        <h2 id="config-heading" class="section-title">Run Configuration</h2>
+        <p class="section-subtitle">Set pacing targets and send them to the band</p>
+
+        <form id="config-form" class="config-form" novalidate>
+          <fieldset class="m3-card form-group">
+            <legend class="form-legend">Target Pace (entire run)</legend>
+            <label class="field">
+              <span class="field__label">Minutes</span>
+              <input type="number" id="target-min" name="targetMin" min="0" max="59" placeholder="8" required />
+            </label>
+            <label class="field">
+              <span class="field__label">Seconds</span>
+              <input type="number" id="target-sec" name="targetSec" min="0" max="59" placeholder="30" required />
+            </label>
+            <span class="field__hint">min / mile</span>
+          </fieldset>
+
+          <fieldset class="m3-card form-group form-group--splits">
+            <legend class="form-legend">Split Paces (optional, per mile)</legend>
+            <p class="field__hint">Add mile-by-mile targets. Leave empty to use target pace only.</p>
+            <div id="splits-container" class="splits-list"></div>
+            <button type="button" id="btn-add-split" class="btn btn--outlined">
+              <span class="btn__label">Add Split Mile</span>
+            </button>
+          </fieldset>
+
+          <fieldset class="m3-card form-group">
+            <legend class="form-legend">Break / Resting Pace</legend>
+            <label class="field">
+              <span class="field__label">Minutes</span>
+              <input type="number" id="break-min" name="breakMin" min="0" max="59" placeholder="10" />
+            </label>
+            <label class="field">
+              <span class="field__label">Seconds</span>
+              <input type="number" id="break-sec" name="breakSec" min="0" max="59" placeholder="00" />
+            </label>
+            <span class="field__hint">min / mile (walk / recovery)</span>
+          </fieldset>
+
+          <div class="form-actions">
+            <button type="submit" id="btn-send-config" class="btn btn--filled">
+              <span class="btn__label">Send Configuration to Wearable</span>
+            </button>
+            <button type="button" id="btn-calibrate" class="btn btn--tonal">
+              <span class="btn__label">Calibrate Pacing</span>
+            </button>
+          </div>
+        </form>
+        <p id="config-feedback" class="feedback" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <!-- CUE TRACKER + RUN HISTORY — White, two columns -->
+    <section class="section section--white" id="insights" aria-label="Session insights">
+      <div class="section__inner">
+        <div class="two-col">
+          <article class="m3-card two-col__item" id="cue-tracker" aria-labelledby="cue-heading">
+            <h2 id="cue-heading" class="section-title section-title--in-card">Cue Tracker</h2>
+            <p class="section-subtitle section-subtitle--in-card">Microservo corrections this session</p>
+
+            <p id="cue-count" class="cue-count" aria-live="polite">0</p>
+            <p class="cue-count-label">Kinetic Cues Triggered</p>
+            <p id="motivation-message" class="motivation m3-card m3-card--filled" aria-live="polite">
+              Connect your band and start a run to track cues.
+            </p>
+          </article>
+
+          <article class="m3-card two-col__item" id="run-history" aria-labelledby="history-heading">
+            <header class="history-header">
+              <div>
+                <h2 id="history-heading" class="section-title section-title--in-card">Run History</h2>
+                <p class="section-subtitle section-subtitle--in-card">Saved locally in your browser</p>
+              </div>
+              <button type="button" id="btn-clear-history" class="btn btn--outlined btn--compact">
+                <span class="btn__label">Clear History</span>
+              </button>
+            </header>
+
+            <div class="table-wrap m3-card m3-card--inset">
+              <table class="history-table" aria-describedby="history-empty-msg">
+                <thead>
+                  <tr>
+                    <th scope="col">Timestamp</th>
+                    <th scope="col">Target Pace</th>
+                    <th scope="col">Actual Pace</th>
+                    <th scope="col">Total Cues</th>
+                  </tr>
+                </thead>
+                <tbody id="history-tbody"></tbody>
+              </table>
+              <p id="history-empty-msg" class="history-empty">No runs saved yet. Complete a run to see history here.</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="section section--white footer">
+    <p class="footer__text">RaceBand · Web Serial @ 115200 baud · Data stored locally only</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

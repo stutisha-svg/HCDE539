@@ -1,0 +1,575 @@
+/* ==========================================================================
+   RaceBand — Material 3–inspired surfaces (vanilla CSS)
+   Typography: Bungee (headings + action buttons), Courier Prime Sans (body)
+   Text: #000000 · No orange palette
+   ========================================================================== */
+
+:root {
+  --color-text: #000000;
+  --color-purple: #9f3db8;
+  --color-white: #ffffff;
+  --color-green: #75b83d;
+
+  --font-heading: "Bungee", system-ui, sans-serif;
+  --font-body: "Courier Prime Sans", "Courier New", monospace;
+
+  /* Material 3 shape (medium / large corners) */
+  --m3-shape-corner-medium: 12px;
+  --m3-shape-corner-large: 16px;
+  --m3-shape-corner-small: 4px;
+
+  /* Elevation shadows (approximate M3 levels) */
+  --m3-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
+  --m3-elevation-2: 0 2px 6px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08);
+  --m3-elevation-3: 0 4px 8px rgba(0, 0, 0, 0.14), 0 8px 24px rgba(0, 0, 0, 0.1);
+
+  --section-padding-y: 3rem;
+  --section-padding-x: 2.5rem;
+  --inner-max-width: 1200px;
+  --gap: 1.5rem;
+
+  /* Action buttons — 2× prior scale (~0.95rem / 0.65rem pad) */
+  --btn-font-size: 1.9rem;
+  --btn-padding-y: 1.3rem;
+  --btn-padding-x: 2.5rem;
+  --btn-min-height: 4.25rem;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.5;
+  background: var(--color-white);
+}
+
+h1,
+h2,
+h3,
+.section-title,
+.page-title,
+.form-legend {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  color: var(--color-text);
+  margin: 0 0 0.5rem;
+  line-height: 1.2;
+}
+
+p,
+label,
+input,
+td,
+th,
+.stat-card__label,
+.stat-card__unit,
+.stat-card__meta,
+.field__label,
+.field__hint,
+.tagline,
+.section-subtitle,
+.cue-count-label,
+.feedback,
+.footer__text,
+.chip,
+.motivation {
+  font-family: var(--font-body);
+  color: var(--color-text);
+}
+
+/* --- Material 3 cards ----------------------------------------------------- */
+
+.m3-card {
+  background: var(--color-white);
+  border-radius: var(--m3-shape-corner-large);
+  box-shadow: var(--m3-elevation-1);
+  border: none;
+  padding: 1.5rem 1.75rem;
+}
+
+.m3-card--elevated {
+  box-shadow: var(--m3-elevation-2);
+}
+
+.m3-card--filled {
+  background: rgba(0, 0, 0, 0.04);
+  box-shadow: none;
+  border-radius: var(--m3-shape-corner-medium);
+}
+
+.m3-card--inset {
+  padding: 0;
+  overflow: hidden;
+  border-radius: var(--m3-shape-corner-medium);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+/* --- Sections ------------------------------------------------------------- */
+
+.section {
+  width: 100%;
+  padding: var(--section-padding-y) var(--section-padding-x);
+}
+
+.section--purple {
+  background-color: var(--color-purple);
+}
+
+.section--white {
+  background-color: var(--color-white);
+}
+
+.section--green {
+  background-color: var(--color-green);
+}
+
+.section__inner {
+  max-width: var(--inner-max-width);
+  margin: 0 auto;
+}
+
+.section-title {
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.section-title--in-card {
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+}
+
+.section-subtitle,
+.tagline {
+  margin: 0 0 1.25rem;
+  font-size: 1rem;
+}
+
+.section-subtitle--in-card {
+  margin-bottom: 1rem;
+}
+
+.page-title {
+  font-size: clamp(2rem, 4vw, 3rem);
+  margin-bottom: 0.25rem;
+}
+
+/* --- Two-column layout (cue tracker | run history) ---------------------- */
+
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--gap);
+  align-items: start;
+}
+
+.two-col__item {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- Connection bar ------------------------------------------------------- */
+
+.connection-card {
+  margin-top: 0.5rem;
+}
+
+.connection-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap);
+}
+
+/* --- Chips / status tags (compact, subtle corners) ------------------------ */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--m3-shape-corner-small);
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: none;
+  line-height: 1.3;
+}
+
+.chip__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 2px;
+  background: var(--color-text);
+  flex-shrink: 0;
+}
+
+.chip--connected {
+  border-color: var(--color-green);
+  background: rgba(117, 184, 61, 0.2);
+}
+
+.chip--connected .chip__dot {
+  background: var(--color-green);
+}
+
+.chip--disconnected .chip__dot {
+  background: var(--color-purple);
+}
+
+/* --- Action buttons (large, Bungee, arrow suffix) ----------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  font-family: var(--font-heading);
+  font-size: var(--btn-font-size);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-text);
+  border: none;
+  border-radius: var(--m3-shape-corner-large);
+  padding: var(--btn-padding-y) var(--btn-padding-x);
+  min-height: var(--btn-min-height);
+  cursor: pointer;
+  box-shadow: var(--m3-elevation-2);
+  transition: box-shadow 0.15s ease, transform 0.1s ease, filter 0.15s ease;
+}
+
+.btn::after {
+  content: "→";
+  font-family: var(--font-heading);
+  font-size: 1.1em;
+  line-height: 1;
+  margin-left: 0.15em;
+}
+
+.btn__label {
+  /* Wraps label text; arrow lives on .btn::after */
+}
+
+.btn:hover:not(:disabled) {
+  box-shadow: var(--m3-elevation-3);
+  transform: translateY(-2px);
+  filter: brightness(1.02);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: var(--m3-elevation-1);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn--filled {
+  background: var(--color-white);
+}
+
+.btn--tonal {
+  background: rgba(159, 61, 184, 0.22);
+}
+
+.btn--outlined {
+  background: var(--color-white);
+  box-shadow: none;
+  outline: 2px solid var(--color-text);
+  outline-offset: -2px;
+}
+
+.btn--outlined:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.btn--compact {
+  --btn-font-size: 0.85rem;
+  --btn-padding-y: 0.65rem;
+  --btn-padding-x: 1.1rem;
+  --btn-min-height: 2.5rem;
+  border-radius: var(--m3-shape-corner-medium);
+}
+
+/* --- Dashboard ------------------------------------------------------------ */
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--gap);
+}
+
+.stat-card {
+  /* m3-card supplies surface */
+}
+
+.stat-card__label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 0.5rem;
+}
+
+.stat-card__value {
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 700;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-card__value--small {
+  font-size: 1.25rem;
+}
+
+.stat-card__unit,
+.stat-card__meta {
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
+}
+
+.stat-card__delta {
+  margin: 0.5rem 0 0;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+/* --- Run configuration ---------------------------------------------------- */
+
+.config-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.form-group {
+  margin: 0;
+  border: none;
+}
+
+.form-legend {
+  font-size: 1.1rem;
+  padding: 0;
+  margin-bottom: 0.75rem;
+}
+
+.field {
+  display: inline-flex;
+  flex-direction: column;
+  margin-right: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.field__label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.field__hint {
+  display: block;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+input[type="number"] {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: var(--color-text);
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: var(--m3-shape-corner-small);
+  padding: 0.5rem 0.65rem;
+  width: 5rem;
+  background: var(--color-white);
+}
+
+input[type="number"]:focus {
+  outline: 2px solid var(--color-purple);
+  outline-offset: 1px;
+}
+
+.splits-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.split-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--m3-shape-corner-medium);
+  background: rgba(0, 0, 0, 0.04);
+  box-shadow: var(--m3-elevation-1);
+}
+
+.split-row__mile {
+  font-weight: 700;
+  min-width: 4rem;
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap);
+}
+
+.feedback {
+  margin-top: 1rem;
+  font-weight: 700;
+  min-height: 1.5em;
+}
+
+/* --- Cue tracker (in two-col card) ---------------------------------------- */
+
+.cue-count {
+  font-family: var(--font-heading);
+  font-size: clamp(3rem, 8vw, 5rem);
+  line-height: 1;
+  margin: 0.25rem 0;
+  color: var(--color-text);
+}
+
+.cue-count-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 1rem;
+}
+
+.motivation {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-top: auto;
+  padding: 1rem 1.25rem;
+  text-align: center;
+}
+
+/* --- Run history (in two-col card) ---------------------------------------- */
+
+.history-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.table-wrap {
+  flex: 1;
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.history-table th,
+.history-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  color: var(--color-text);
+}
+
+.history-table th {
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.history-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.history-table tbody tr:hover {
+  background: rgba(159, 61, 184, 0.08);
+}
+
+.history-empty {
+  padding: 2rem 1rem;
+  text-align: center;
+  margin: 0;
+}
+
+.history-empty[hidden] {
+  display: none;
+}
+
+/* --- Footer --------------------------------------------------------------- */
+
+.footer {
+  padding: 1.5rem var(--section-padding-x);
+  text-align: center;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.footer__text {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+/* --- Responsive ----------------------------------------------------------- */
+
+@media (max-width: 960px) {
+  .two-col {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  :root {
+    --section-padding-x: 1.25rem;
+    --section-padding-y: 2rem;
+    --btn-font-size: 1rem;
+    --btn-padding-x: 1.5rem;
+  }
+
+  .connection-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn:not(.btn--compact) {
+    width: 100%;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .history-header {
+    flex-direction: column;
+  }
+}
