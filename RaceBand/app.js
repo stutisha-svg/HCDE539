@@ -1,6 +1,16 @@
 /**
  * RaceBand — Kinetic Pacing Wearable Dashboard
+ * HCDE 539 · University of Washington
+ *
  * Pure vanilla JS · Web Serial API · localStorage
+ *
+ * ---------------------------------------------------------------------------
+ * Attribution
+ * ---------------------------------------------------------------------------
+ * This dashboard application logic was developed with assistance from Cursor
+ * (AI-assisted IDE).
+ *
+ * Third-party: Web Serial API (browser); Google Fonts loaded from racebandapp.html.
  *
  * SERIAL PROTOCOL (match your firmware to these lines)
  * ----------------------------------------------------

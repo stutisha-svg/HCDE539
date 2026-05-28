@@ -1,6 +1,12 @@
+/*
+ * RaceBand — I2C bus scanner for MPU6050 wiring check (HCDE 539)
+ * Scans addresses 1–126 on SDA D4 / SCL D5 every 5 seconds.
+ *
+ * Third-party: Arduino Wire library.
+ */
+
 #include <Wire.h>
 
-// Explicitly define your physical data lines
 const int mySDA = D4;
 const int mySCL = D5;
 

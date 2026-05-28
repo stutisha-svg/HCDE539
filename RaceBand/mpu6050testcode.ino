@@ -1,3 +1,10 @@
+/*
+ * RaceBand — MPU6050 + LED bench test (HCDE 539)
+ * Prints accelerometer values every 15 s; blinks LED every 500 ms (non-blocking).
+ *
+ * Third-party: Adafruit MPU6050, Adafruit Unified Sensor, Arduino Wire.
+ */
+
 #include <Wire.h>
 #include <Adafruit_MPU6050.h>
 #include <Adafruit_Sensor.h>

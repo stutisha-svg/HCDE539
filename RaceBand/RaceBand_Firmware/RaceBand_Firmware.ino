@@ -1,8 +1,22 @@
 /*
- * RaceBand — LIVE PRESENTATION MODE (SIMULATED DATA INJECTION)
- * 100% authentic dashboard sync, flash saving, and state machine logic.
- * Bypasses the broken physical sensor with a mathematical "Ghost Sensor"
- * to guarantee flawless live charting and cue execution.
+ * RaceBand — Kinetic pacing wearable firmware (Seeed XIAO ESP32-C3)
+ * HCDE 539 · University of Washington
+ *
+ * LIVE PRESENTATION MODE: uses a simulated "ghost sensor" so dashboard sync,
+ * NVS run snapshots, pacing cues (LED + linear servo), and serial protocol
+ * behave reliably for demos when the physical MPU6050 path is unavailable.
+ *
+ * ---------------------------------------------------------------------------
+ * Attribution
+ * ---------------------------------------------------------------------------
+ * Portions of this firmware were developed with assistance from Google Gemini.
+ *
+ * Third-party libraries (not written for this project):
+ *   - ESP32Servo — https://github.com/madhephaestus/ESP32Servo
+ *   - Preferences (NVS) — Espressif ESP32 Arduino core
+ *
+ * Hardware: LED D9, toggle D3 (INPUT_PULLUP, ON = LOW), servo D8, USB serial.
+ * Baud: 115200. Line protocol documented in app.js and RaceBand_Firmware/README.md.
  */
 
 #include <Preferences.h>
@@ -22,11 +36,11 @@ static const uint32_t SERIAL_BAUD = 115200;
 static bool dashboardConnected = false;
 static String serialLine;
 static const unsigned long FLASH_SAVE_MS = 3000;
-static const unsigned long PACE_EMIT_MS = 1000;          
+static const unsigned long PACE_EMIT_MS = 1000;
 
-// --- Safe Limits to Prevent Whirring/Binding ---
-static const int SERVO_REST = 40;       
-static const int SERVO_PEAK = 140; 
+// Safe servo travel limits (avoid binding / whirring at mechanical stops)
+static const int SERVO_REST = 40;
+static const int SERVO_PEAK = 140;
 static const float PACE_INTENSITY_K = 25.0f;
 static const float PACE_DRIFT_RATIO = 0.10f; 
 
@@ -34,9 +48,9 @@ static const float PACE_DRIFT_RATIO = 0.10f;
 // Types & Globals
 // =============================================================================
 enum RunState {
-  ST_IDLE,           
-  ST_RUNNING,        
-  ST_NEEDS_SYNC    
+  ST_IDLE,         // Not recording; waiting for toggle or USB bench run
+  ST_RUNNING,      // Active run; pacing feedback enabled
+  ST_NEEDS_SYNC    // Run finished on battery; upload RUN_END via USB
 };
 
 Servo linearServo;  
@@ -60,18 +74,18 @@ static float lastSwingIntensity = 0.0f;
 static float lastPaceMinPerMile = 0.0f;
 
 // --- Servo software gearbox ---
-static float servoCurrentAngle = 40.0f; 
-static float servoTargetAngle = 40.0f;  
+static float servoCurrentAngle = 40.0f;
+static float servoTargetAngle = 40.0f;
 
-// Smooth, deliberate speeds so the motor glides silently
+// Servo glide speeds (degrees per gearbox tick, ~30 ms)
 const float extendSpeed = 1.0f;
 const float retractSpeed = 0.5f;
 
 // --- Uninterruptible Cue Logic ---
 static bool isExecutingCue = false;
-static int cuePhase = 0; 
+static int cuePhase = 0;
 
-// --- Breathing LED Variables ---
+// Breathing LED during NEEDS_SYNC (pulse while waiting for dashboard upload)
 static int ledBrightness = 0;
 static int ledFadeAmount = 8;
 
@@ -82,7 +96,7 @@ static unsigned long lastLedBlinkMs = 0;
 static unsigned long lastServoTickMs = 0;
 static bool benchRunActive = false;
 static bool servoAttached = false;
-static bool mpuReady = true; // Hardcoded true to pass hardware checks
+static bool mpuReady = true;  // Presentation build: HW check reports OK without live I2C
 
 // =============================================================================
 // Preferences helpers
@@ -204,10 +218,10 @@ static void emitConfigLine() {
   emitSerialLine(line);
 }
 
-static void finalizeConfiguration(); 
+static void finalizeConfiguration();
 
 // =============================================================================
-// Servo — Smooth Software Gearbox
+// Servo — smooth software gearbox
 // =============================================================================
 static void writeServoAngle(int angle) {
   if (!servoAttached) return;
@@ -220,7 +234,7 @@ static void updateServoGearbox() {
   unsigned long now = millis();
   if (now - lastServoTickMs < 30) return;
   lastServoTickMs = now;
-  
+
   if (servoTargetAngle > servoCurrentAngle) {
     servoCurrentAngle += extendSpeed;
     if (servoCurrentAngle > servoTargetAngle) servoCurrentAngle = servoTargetAngle;
@@ -228,14 +242,14 @@ static void updateServoGearbox() {
     servoCurrentAngle -= retractSpeed;
     if (servoCurrentAngle < servoTargetAngle) servoCurrentAngle = servoTargetAngle;
   }
-  
+
   writeServoAngle((int)servoCurrentAngle);
 }
 
 static bool attachLinearServo() {
-  linearServo.setPeriodHertz(50); 
+  linearServo.setPeriodHertz(50);
   int channel = linearServo.attach(PIN_SERVO, 1000, 2000);
-  if (channel >= 0) { 
+  if (channel >= 0) {
     servoAttached = true;
     emitSerialLine("STATUS,SERVO,OK");
     return true;
@@ -258,7 +272,7 @@ static void turnLedOff() {
 
 static void updateBreathingLed() {
   unsigned long now = millis();
-  if (now - lastLedBlinkMs >= 30) { 
+  if (now - lastLedBlinkMs >= 30) {
     lastLedBlinkMs = now;
     ledBrightness += ledFadeAmount;
     if (ledBrightness <= 0) {
@@ -276,18 +290,18 @@ static void updateBreathingLed() {
 // THE GHOST SENSOR (Simulated Data Injection)
 // =============================================================================
 static bool readSwingSample(float &rawYOut, float &swingOut) {
-  unsigned long cycle = millis() % 12000; // 12-second simulated cycle
-  
-  // For the first 8 seconds, simulate a strong, healthy run (approx 6:00 min/mile)
+  unsigned long cycle = millis() % 12000;  // 12 s repeating demo cycle
+
+  // 0–8 s: strong swing → faster estimated pace (~6:00 / mi)
   if (cycle < 8000) {
-    swingOut = 4.2f; 
-  } 
-  // For the last 4 seconds, simulate getting tired and dropping pace (approx 12:30 min/mile)
+    swingOut = 4.2f;
+  }
+  // 8–12 s: weaker swing → slower pace (~12:30 / mi) to trigger cues
   else {
     swingOut = 2.0f;
   }
 
-  rawYOut = 10.0f; // Fake raw data just in case
+  rawYOut = 10.0f;
   lastSwingIntensity = swingOut;
   lastPaceMinPerMile = estimatePaceMinPerMile(swingOut);
   return true;
@@ -303,35 +317,32 @@ static void recordPaceSample() {
 // =============================================================================
 static void updatePacingFeedback() {
   float target = targetPaceMinPerMile();
-  
-  // 1. TRIGGER: If actual pace is slower than target
+
+  // Trigger: estimated pace slower than target (+ 30 s/mi buffer)
   if (!isExecutingCue && lastPaceMinPerMile > (target + 0.5f)) {
     isExecutingCue = true;
-    cuePhase = 1; 
-    totalCues++;  // Feed the dashboard cue counter!
+    cuePhase = 1;
+    totalCues++;
   }
 
-  // 2. EXECUTION: The locked servo cycle
+  // Execute one full cue cycle (extend to peak, retract to rest) without interruption
   if (isExecutingCue) {
-    updateBreathingLed(); 
+    updateBreathingLed();
 
-    if (cuePhase == 1) { 
+    if (cuePhase == 1) {
       servoTargetAngle = SERVO_PEAK;
       if (servoCurrentAngle >= SERVO_PEAK - 1.0f) {
-        cuePhase = 2; 
+        cuePhase = 2;
       }
-    } 
-    else if (cuePhase == 2) { 
+    } else if (cuePhase == 2) {
       servoTargetAngle = SERVO_REST;
       if (servoCurrentAngle <= SERVO_REST + 1.0f) {
-        isExecutingCue = false; 
+        isExecutingCue = false;
         cuePhase = 0;
         turnLedOff();
       }
     }
-  } 
-  // 3. SILENCE: Hitting target pace
-  else {
+  } else {
     turnLedOff();
     servoTargetAngle = SERVO_REST;
   }
@@ -341,7 +352,7 @@ static void updatePacingFeedback() {
 // Incoming serial commands (dashboard → device)
 // =============================================================================
 static void handleSerialCommand(const String &line) {
-  dashboardConnected = true; 
+  dashboardConnected = true;
 
   String cmd = line;
   cmd.trim();
@@ -399,16 +410,15 @@ static void handleSerialCommand(const String &line) {
     if (sub == "STOP") {
       benchRunActive = false;
       if (runState == ST_RUNNING) {
-        if (paceSampleCount > 0) { 
+        if (paceSampleCount > 0) {
           finalizeRunToFlash();
-          saveRunSnapshotToFlash(); 
-        } 
-        else { 
+          saveRunSnapshotToFlash();
+        } else {
           runState = ST_IDLE;
         }
         turnLedOff();
         centerServoGently();
-        isExecutingCue = false; // Reset the cue lock if stopped
+        isExecutingCue = false;
       }
       emitSerialLine("ACK,RUN_STOP");
       return;
@@ -461,9 +471,9 @@ static bool isRecordingActive() {
 static void finalizeConfiguration() {
   saveConfigToFlash();
 
-  // Fake Hardware Checks for the dashboard
+  // Hardware self-check lines for the web dashboard (presentation build)
   emitSerialLine("STATUS,HW,MPU,OK");
-  
+
   if (!servoAttached) {
     attachLinearServo();
   }
@@ -504,8 +514,9 @@ static void finalizeConfiguration() {
 }
 
 // =============================================================================
-// Setup / loop
+// Arduino setup() and loop()
 // =============================================================================
+
 void setup() {
   Serial.begin(SERIAL_BAUD);
   delay(400);
@@ -525,7 +536,7 @@ void setup() {
 
   emitSerialLine("READY,RaceBand");
   emitConfigLine();
-  
+
   if (pendingSync && paceSampleCount > 0) {
     runState = ST_NEEDS_SYNC;
   } else if (isSwitchRunning()) {
@@ -541,7 +552,7 @@ void loop() {
 
   float rawY = 0.0f, swing = 0.0f;
   readSwingSample(rawY, swing);
-  
+
   if (runState == ST_NEEDS_SYNC) {
     updateBreathingLed();
     servoTargetAngle = SERVO_REST;
@@ -551,15 +562,15 @@ void loop() {
 
   bool recording = isRecordingActive();
   if (!recording && runState == ST_RUNNING) {
-    if (paceSampleCount > 0) { 
+    if (paceSampleCount > 0) {
       finalizeRunToFlash();
-      saveRunSnapshotToFlash(); 
-    } else { 
-      runState = ST_IDLE; 
+      saveRunSnapshotToFlash();
+    } else {
+      runState = ST_IDLE;
     }
     turnLedOff();
     centerServoGently();
-    isExecutingCue = false; // Reset lock
+    isExecutingCue = false;
     updateServoGearbox();
     return;
   }

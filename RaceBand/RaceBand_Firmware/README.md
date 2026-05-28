@@ -1,5 +1,16 @@
 # RaceBand Firmware (XIAO ESP32-C3)
 
+## Attribution
+
+| Component | Credit |
+|-----------|--------|
+| `RaceBand_Firmware.ino` | Portions developed with assistance from **Google Gemini** |
+| `racebandapp.html`, `app.js` | Developed with assistance from **Cursor** |
+| `mpu6050testcode.ino`, `shaketestcode1.ino`, `i2cscannercode/` | Bench tests (no AI attribution required) |
+| Libraries | **ESP32Servo**, **Preferences** (Espressif); **Adafruit MPU6050** / **Unified Sensor** (bench sketches only) |
+
+Before uploading firmware: **Sketch → Auto Format** in the Arduino IDE.
+
 ## Arduino IDE setup
 
 1. **Board:** `XIAO_ESP32C3` under *esp32 by Espressif Systems*

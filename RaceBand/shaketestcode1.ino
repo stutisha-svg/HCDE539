@@ -1,12 +1,19 @@
+/*
+ * RaceBand — Shake / pace-feedback bench test (HCDE 539)
+ * Blinks LED when arm swing intensity is below target (serial target pace input).
+ *
+ * Third-party: Adafruit MPU6050, Adafruit Unified Sensor, Arduino Wire.
+ */
+
 #include <Wire.h>
 #include <Adafruit_MPU6050.h>
 #include <Adafruit_Sensor.h>
 
 Adafruit_MPU6050 mpu;
 
-// Pin Definitions matching your schematic
-const int ledPin = D9;      
-const int switchPin = D3; // Update this to wherever your switch is wired!  
+// Pin map (Seeed XIAO ESP32-C3)
+const int ledPin = D9;
+const int switchPin = D3;  // INPUT_PULLUP; LOW = switch ON
 
 // Pace Variables
 float targetPace = 8.0; 
@@ -86,5 +93,5 @@ void loop() {
     ledState = LOW;
   }
   
-  // Notice: The delay(100) has been removed so the loop runs fast enough to catch the blink timing!
+  // No delay(100) here — loop must stay fast enough for non-blocking blink timing.
 }
