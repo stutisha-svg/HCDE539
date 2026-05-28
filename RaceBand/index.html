@@ -109,12 +109,8 @@
             <button type="submit" id="btn-send-config" class="btn btn--filled">
               <span class="btn__label">Send Configuration to Wearable</span>
             </button>
-            <button type="button" id="btn-calibrate" class="btn btn--tonal">
-              <span class="btn__label">Calibrate Pacing</span>
-            </button>
           </div>
         </form>
-        <p id="config-feedback" class="feedback" role="status" aria-live="polite"></p>
       </div>
     </section>
 
@@ -160,6 +156,75 @@
             </div>
           </article>
         </div>
+      </div>
+    </section>
+
+    <!-- DEVICE LAB — Green, bottom: USB test, calibrate, telemetry, serial log -->
+    <section class="section section--green" id="device-lab" aria-labelledby="device-lab-heading">
+      <div class="section__inner">
+        <h2 id="device-lab-heading" class="section-title">Device Lab</h2>
+        <p class="section-subtitle">USB testing, calibration, and live serial output</p>
+
+        <div class="device-lab-toolbar m3-card">
+          <div class="device-lab-actions">
+            <button type="button" id="btn-calibrate" class="btn btn--tonal btn--small">
+              <span class="btn__label">Calibrate Pacing</span>
+            </button>
+            <button type="button" id="btn-run-start" class="btn btn--outlined btn--small">
+              <span class="btn__label">Start Run (USB test)</span>
+            </button>
+            <button type="button" id="btn-run-stop" class="btn btn--outlined btn--small">
+              <span class="btn__label">Stop Run &amp; Save</span>
+            </button>
+          </div>
+          <p class="field__hint device-lab-hint">
+            After <strong>Send Configuration</strong>, the band runs hardware checks (MPU, servo,
+            flash). If all pass: disconnect USB, toggle <strong>ON</strong>, then run.
+          </p>
+        </div>
+
+        <article class="m3-card device-telemetry" aria-labelledby="telemetry-heading">
+          <h3 id="telemetry-heading" class="stat-card__label">Live device telemetry</h3>
+          <p class="field__hint">Updates from DBG and STATUS lines.</p>
+          <dl class="telemetry-grid">
+            <div class="telemetry-item">
+              <dt>Servo</dt>
+              <dd id="status-servo">—</dd>
+            </div>
+            <div class="telemetry-item">
+              <dt>MPU6050</dt>
+              <dd id="status-mpu">—</dd>
+            </div>
+            <div class="telemetry-item">
+              <dt>Firmware state</dt>
+              <dd id="status-run-state">—</dd>
+            </div>
+            <div class="telemetry-item">
+              <dt>Swing intensity</dt>
+              <dd id="status-swing">—</dd>
+            </div>
+            <div class="telemetry-item">
+              <dt>Toggle (1=on)</dt>
+              <dd id="status-switch">—</dd>
+            </div>
+            <div class="telemetry-item">
+              <dt>USB bench run</dt>
+              <dd id="status-bench">—</dd>
+            </div>
+          </dl>
+        </article>
+
+        <article class="m3-card serial-log-card" aria-labelledby="serial-log-heading">
+          <div class="serial-log-header">
+            <h3 id="serial-log-heading" class="stat-card__label">Serial log</h3>
+            <button type="button" id="btn-clear-log" class="btn btn--outlined btn--small">
+              <span class="btn__label">Clear log</span>
+            </button>
+          </div>
+          <pre id="serial-log" class="serial-log" aria-live="polite"></pre>
+        </article>
+
+        <p id="config-feedback" class="feedback" role="status" aria-live="polite"></p>
       </div>
     </section>
   </main>

@@ -311,6 +311,20 @@ th,
   border-radius: var(--m3-shape-corner-medium);
 }
 
+.btn--small {
+  --btn-font-size: 0.65rem;
+  --btn-padding-y: 0.4rem;
+  --btn-padding-x: 0.7rem;
+  --btn-min-height: 1.85rem;
+  border-radius: var(--m3-shape-corner-small);
+  letter-spacing: 0.01em;
+}
+
+.btn--small::after {
+  font-size: 0.9em;
+  margin-left: 0.1em;
+}
+
 /* --- Dashboard ------------------------------------------------------------ */
 
 .dashboard-grid {
@@ -352,6 +366,89 @@ th,
   margin: 0.5rem 0 0;
   font-weight: 700;
   font-size: 0.95rem;
+}
+
+/* --- Device lab (bottom): actions, telemetry, serial log ------------------ */
+
+.device-lab-toolbar {
+  margin-bottom: var(--gap);
+  padding: 1rem 1.25rem;
+}
+
+.device-lab-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.device-lab-hint {
+  margin: 0.85rem 0 0;
+  font-size: 0.8rem;
+}
+
+.device-telemetry,
+.serial-log-card {
+  margin-top: var(--gap);
+}
+
+.telemetry-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem 1.5rem;
+  margin: 0;
+}
+
+.telemetry-item dt {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 0.25rem;
+}
+
+.telemetry-item dd {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.serial-log-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.serial-log {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  max-height: 220px;
+  overflow-y: auto;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: var(--m3-shape-corner-medium);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.serial-log__line--err {
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.serial-log__line--dbg {
+  opacity: 0.85;
+}
+
+@media (max-width: 720px) {
+  .telemetry-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 /* --- Run configuration ---------------------------------------------------- */
@@ -561,8 +658,13 @@ input[type="number"]:focus {
     align-items: stretch;
   }
 
-  .btn:not(.btn--compact) {
+  .btn:not(.btn--compact):not(.btn--small) {
     width: 100%;
+  }
+
+  .device-lab-actions .btn--small {
+    flex: 1 1 auto;
+    min-width: 8rem;
   }
 
   .form-actions {
